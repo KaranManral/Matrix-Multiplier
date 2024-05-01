@@ -1,113 +1,238 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
+  const [rowA, setRowA] = useState(0);
+  const [colA, setColA] = useState(0);
+  const [rowB, setRowB] = useState(0);
+  const [colB, setColB] = useState(0);
+  const [result,setResult] = useState([]);
+
+  useEffect(() => {
+    //make state change visible
+  });
+
+  //Controller Methods
+
+  function getRowA(size){
+    setRowA(size);
+  }
+  
+  function getColumnA(size){
+    setColA(size);
+  }
+  
+  function getRowB(size){
+    setRowB(size);
+  }
+  
+  function getColumnB(size){
+    setColB(size);
+  }
+
+  function operate(matA,matB,rA,cA,rB,cB){
+    if(cA!=rB){
+      return null;
+    }
+    
+    const resultMatrix = Array.from({ length: rA }, () => new Array(Math.max(0,cB)).fill(0));
+      
+      for(let i=0;i<rA;i++){
+        for(let j=0;j<cB;j++){
+          for (let k = 0; k < cA; k++) {
+            resultMatrix[i][j] += matA[i][k] * matB[k][j];
+          }
+        }
+      }
+      
+      return resultMatrix;
+  }
+
+  function multiply(e){
+    e.preventDefault();
+    e.target.disabled=true;
+    const matrixA = Array.from({ length: rowA }, () => new Array(Math.max(0,colA)));
+    const matrixB = Array.from({ length: rowB }, () => new Array(Math.max(0,colB)));
+
+    //Fetching values and creating matrix
+    let inputs = document.querySelectorAll("input[type=number]");
+    for(let i of inputs){
+      if(i!=undefined){
+        i.disabled = true;
+        let id = i.id;
+        if(id){
+          id=id.split("_");
+          if(id.length===3&&id[0]==="A"){
+            if(i.value)
+              matrixA[id[1]][id[2]]=parseFloat(i.value);
+            else
+              matrixA[id[1]][id[2]]=0;
+          }
+            
+          else if(id.length===3&&id[0]==="B") {
+            if(i.value)
+              matrixB[id[1]][id[2]]=parseFloat(i.value);
+            else
+              matrixB[id[1]][id[2]]=0;
+          }
+        }
+      }
+    }
+    
+    const ans = operate(matrixA,matrixB,rowA,colA,rowB,colB);
+
+    //Incompatible matrices
+    if(ans===null){
+      alert("Matrices are incompatible, can't perform multiplication.");
+      reset();
+    }
+    //Compatible Matrices
+    else{
+      setResult(ans);
+    }
+  }
+  
+  function reset(){
+    let inputs = document.querySelectorAll("input[type=number]");
+    for(let i of inputs){
+      if(i!=undefined){
+        i.disabled = false;
+      }
+    }
+    setRowA(0);
+    setColA(0);
+    setRowB(0);
+    setColB(0);
+    setResult([]);
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+    <main className="container grid my-10 mx-auto">
+      <h1 className="text-purple-700 text-6xl max-sm:text-4xl text-center font-serif font-semibold">
+        Matrix Multiplication
+      </h1>
+      <button type="button" className="px-10 py-5 w-fit mx-16 mt-10 bg-red-700 hover:bg-red-600 text-white rounded-md" onClick={(e)=>{reset();}}>Reset</button>
+      <div className="flex flex-wrap w-full justify-around mt-10">
+        <div className="matrixA">
+          <p className="text-xl max-sm:text-lg my-2">
+            Enter the size of matrix A
+          </p>
+          <div className="flex justify-around bg-white border-gray-50 border rounded-2xl p-10 min-w-80 max-w-full w-96">
+            <p>Row:</p>
+            <input
+              type="number"
+              name="rowA"
+              id="rowA"
+              min={0}
+              value={rowA}
+              onChange={(e) => {
+                getRowA(e.target.value);
+              }}
             />
-          </a>
+            <p>Column:</p>
+            <input
+              type="number"
+              name="colA"
+              id="colA"
+              min={0}
+              value={colA}
+              onChange={(e) => {
+                getColumnA(e.target.value);
+              }}
+            />
+          </div>
+          {rowA>0&&colA>0?
+            <div className="flex mt-10 justify-around items-center bg-white border-gray-50 border rounded-2xl p-10 min-w-80 w-fit overflow-auto">
+            <p>A:</p>
+            <div className="flex flex-col flex-nowrap border-black border-x-4 border-y-0 rounded-2xl p-5">
+              {[...Array(Math.max(0, rowA))].map((x,i)=>{
+                return (
+                  <div className="flex justify-around flex-nowrap" key={`A_${i}`}>
+                  {[...Array(Math.max(0, colA)).keys()].map((x1,i1)=>{
+                    return <input type="number" className="m-px" name={`A_${i}_${i1}`} id={`A_${i}_${i1}`} key={`A_${i}_${i1}`} title={`[${i},${i1}]`} defaultValue={0} />
+                  })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          :""}   
+        </div>
+        <div className="matrixB">
+          <p className="text-xl max-sm:text-lg my-2">
+            Enter the size of matrix B
+          </p>
+          <div className="flex justify-around bg-white border-gray-50 border rounded-2xl p-10 min-w-80 max-w-full w-96">
+            <p>Row:</p>
+            <input
+              type="number"
+              name="rowB"
+              id="rowB"
+              min={0}
+              value={rowB}
+              onChange={(e) => {
+                getRowB(e.target.value);
+              }}
+            />
+            <p>Column:</p>
+            <input
+              type="number"
+              name="colB"
+              id="colB"
+              min={0}
+              value={colB}
+              onChange={(e) => {
+                getColumnB(e.target.value);
+              }}
+            />
+          </div>
+          {rowB>0&&colB>0?
+            <div className="flex mt-10 justify-around items-center bg-white border-gray-50 border rounded-2xl p-10 min-w-80 w-fit overflow-auto">
+            <p>B:</p>
+            <div className="flex flex-col flex-nowrap border-black border-x-4 border-y-0 rounded-2xl p-5">
+              {[...Array(Math.max(0, rowB))].map((x,i)=>{
+                return (
+                  <div className="flex justify-around flex-nowrap" key={`B_${i}`}>
+                  {[...Array(Math.max(0, colB)).keys()].map((x1,i1)=>{
+                    return <input type="number" className="m-px" name={`B_${i}_${i1}`} id={`B_${i}_${i1}`} key={`B_${i}_${i1}`} title={`[${i},${i1}]`} defaultValue={0} />
+                  })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          :""}   
         </div>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      {rowA>0&&colA>0&&rowB>0&&colB>0?
+      <button type="button" className="px-10 py-5 w-fit justify-self-center mt-10 bg-blue-600 hover:bg-blue-700 text-white rounded-md" onClick={(e)=>{multiply(e)}}>Multiply</button>
+      :""}
+      {result.length>0?
+      <div className="solution justify-self-center flex mt-10 justify-around items-center bg-white border-gray-50 border rounded-2xl p-10 w-fit min-w-80 overflow-auto">
+      <h1>Result:</h1>
+      <table className="flex flex-col flex-nowrap border-collapse border-black border-x-4 border-y-0 rounded-2xl p-5">
+            <tbody>
+              <tr>
+                <th className="border-2">Index</th>
+                {[...Array(Math.max(0,colB))].map((x,i)=>{
+                  return <th className="border-2" key={`th_${i}`}>C{i}</th>
+                })}
+              </tr>
+            {result.map((x,i)=>{
+              return (
+                <tr key={`Result_${i}`}>
+                <th className="m-0.5 border-2 min-w-10 text-center" key={`td_${i}`}>R{i}</th>
+                {x.map((x1,i1)=>{
+                  return <td className="m-0.5 border-2 min-w-10 text-center" key={`Result_${i}_${i1}`}>{x1}</td>
+                })}
+                </tr>
+              );
+            })}
+            </tbody>
+          </table>
+    </div>
+    :""}
     </main>
   );
 }
